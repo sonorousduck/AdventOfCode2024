@@ -13,74 +13,67 @@ def read_file(filepath: str) -> np.ndarray:
 
     return np.array(lines)
 
-# def check_straight_direction(index_direction: tuple[int, int], index, lines, is_left_right: bool):
-#     test_string = ""
+def check_bounds(index: tuple[int, int], lines: np.ndarray) -> bool:
+    return index[0] < lines.shape[1] and index[0] >= 0 and index[1] < lines.shape[0] and index[1] >= 0
 
-#     for i in range(4):
-#         if is_left_right:
-#             if i + index[1]
+
+def check_direction(index_direction: tuple[int, int], index: tuple[int, int], lines: np.ndarray) -> int:  
+    potential_string = ""
+    
+    for i in range(4):
+        new_index = (index[0] + (i * index_direction[0]), index[1] + (i * index_direction[1]))
+        if check_bounds(new_index, lines):
+                potential_string += lines[new_index[1], new_index[0]]
+        else:
+            break
+    
+    if potential_string == "XMAS":
+        return 1
+    return 0
+
+def check_for_x_mas(index: tuple[int, int], lines: np.ndarray) -> int:  
+    cross_1 = ""
+    cross_2 = ""
+    
+    middle_of_cross = (index[0] + 1, index[1] + 1)
+    
+    positions_for_cross_1 = [index, middle_of_cross, (index[0] + 2, index[1] + 2)]
+    positions_for_cross_2 = [(index[0] + 2, index[1]), middle_of_cross, (index[0], index[1] + 2)]
+    
+    for i in positions_for_cross_1:
+        if not check_bounds(i, lines):
+            return 0
+        else:
+            cross_1 += lines[i[1], i[0]]
+    for i in positions_for_cross_2:
+        if not check_bounds(i, lines):
+            return 0
+        else:
+            cross_2 += lines[i[1], i[0]]
+            
+    
+    
+    
+    if (cross_1 == "MAS" or cross_1 == "SAM") and (cross_2 == "MAS" or cross_2 == "SAM"):
+        return 1
+    return 0
+            
 
 
 # This function will take an index and find all the possible directions and return the number
 # of times xmas appeared for that individual location
-def find_xmas(index: tuple[int, int], lines: list[list]):
+def find_xmas(index: tuple[int, int], lines: np.ndarray):
     matches = 0
 
-
-    # Check up
-    up_string = ""
-    for y in range(4):
-        if y - index[1] < 0:
-            break
-        else:
-            up_string += lines[index[0], y - index[1]]
-
-    if up_string == "XMAS":
-        matches += 1 
-
-
-    # Check Down
-    down_string = ""
-    for y in range(4):
-        if y + index[1] >= lines.shape[1]:
-            break
-        else:
-            down_string += lines[index[0], y + index[1]]
-
-    if down_string == "XMAS":
-        matches += 1 
-
-
-    # Check Left
-    left_string = ""
-    for x in range(4):
-        if x - index[0] < 0:
-            break
-        else:
-            left_string += lines[x - index[0], index[1]]
-    if left_string == "XMAS":
-        matches += 1 
-
-    # Check Right
-    right_string = ""
-    for x in range(4):
-        if x - index[0] >= lines.shape[0]:
-            break
-        else:
-            right_string += lines[x - index[0], index[1]]
-    if right_string == "XMAS":
-        matches += 1 
-
-    # Check Up Left Diagonal
-
-
-    # Check Up Right Diagonal
-
-    # Check Down Left Diagonal
-
-    # Check Down Right Diagonal
-
-    # print(matches)
+    horizontal_directions = [-1, 0, 1]
+    vertical_directions = [-1, 0, 1]
+    # horizontal_directions = [1]
+    # vertical_directions = [0]
+    
+    for vertical_direction in vertical_directions:
+        for horizontal_direction in horizontal_directions:
+            matches += check_direction((horizontal_direction, vertical_direction), index, lines)
+    
 
     return matches
 
@@ -88,11 +81,16 @@ def find_xmas(index: tuple[int, int], lines: list[list]):
 
 
 if __name__ == "__main__":
-    lines = read_file("examples/example_4.txt")
+    # lines = read_file("examples/example_4.txt")
+    lines = read_file("puzzles/puzzle_4.txt")
 
     matches = 0
+    matches_part_2 = 0
     for i, line in enumerate(lines):
         for j, ch in enumerate(line):
-            matches += find_xmas((i, j), lines)
+            matches += find_xmas((j, i), lines)
+            matches_part_2 += check_for_x_mas((j, i), lines)
 
     print(f"Total Matches: {matches}")
+    print(f"Total Cross MASes: {matches_part_2}")
+    
